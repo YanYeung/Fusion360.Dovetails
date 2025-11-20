@@ -324,13 +324,13 @@ class DovetailsCommandExecuteEventHandler(adsk.core.CommandEventHandler):
             sketch = adsk.fusion.Sketch.cast(component.sketches.add(face))
             sketch.name = params_prefix + "sketch"
             projected_edge = adsk.fusion.SketchLine.cast(sketch.project(edge)[0])
-            
+
             v_start = projected_edge.startSketchPoint.geometry.asVector()
             v_end = projected_edge.endSketchPoint.geometry.asVector()
             
             v_edge = v_end.copy()
             v_edge.subtract(v_start)
-            
+
             face_center_in_sketch = sketch.modelToSketchSpace(face.centroid)
             
             (res, face_normal) = face.evaluator.getNormalAtPoint(face.centroid)
@@ -350,10 +350,10 @@ class DovetailsCommandExecuteEventHandler(adsk.core.CommandEventHandler):
             if v_outside.angleTo(v_to_face_center) < math.pi / 2:
                 v_outside.transformBy(new_rotation_matrix(math.pi, v_edge, origin))
 
-            #debug_draw_line(sketch, origin, face_center_in_sketch)
-            #debug_draw_line(sketch, origin, v_edge)
-            #debug_draw_line(sketch, origin, v_outside)
-            #debug_draw_line(sketch, origin, face_normal)
+            # debug_draw_line(sketch, origin, face_center_in_sketch)
+            # debug_draw_line(sketch, origin, v_edge)
+            # debug_draw_line(sketch, origin, v_outside)
+            # debug_draw_line(sketch, origin, face_normal)
 
             transform = adsk.core.Matrix3D.create()
             transform.transformBy(new_rotation_matrix(adsk.core.Vector3D.create(0, 1, 0).angleTo(v_outside), adsk.core.Vector3D.create(0, 0, 1)))
@@ -487,7 +487,7 @@ class DovetailsCommandExecuteEventHandler(adsk.core.CommandEventHandler):
             
             pattern_input = component.features.rectangularPatternFeatures.createInput(
                 objects,
-                edge,
+                projected_edge,
                 adsk.core.ValueInput.createByString(count_param.name),
                 adsk.core.ValueInput.createByString(pattern_spacing_expression),
                 adsk.fusion.PatternDistanceType.SpacingPatternDistanceType)
