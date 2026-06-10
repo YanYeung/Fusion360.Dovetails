@@ -4,7 +4,7 @@
 	"id":	"5b5c28ec-99f3-49c7-8526-5b78c2464185",
 	"author":	"Michael Logutov",
 	"description":	{
-		"":	"Creates \"tails\" part of the dovetail woodworking joint on the specified edge"
+		"":	"在指定边缘创建燕尾榫的\"榫头\"部分"
 	},
 	"version":	"1.0.0",
 	"runOnStartup":	true,

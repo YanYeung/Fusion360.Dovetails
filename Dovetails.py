@@ -1,9 +1,9 @@
 #Author-Michael Logutov
-#Description-Creates "tails" part of the dovetail woodworking joint on the specified edge
+#Description-在指定边缘创建燕尾榫的"榫头"部分
 
 handlers = []
 
-ADDIN_NAME = "Dovetails"
+ADDIN_NAME = "燕尾榫"
 COMMAND_ID = ADDIN_NAME + "Addin"
 
 import adsk.core, adsk.fusion, adsk.cam, traceback, math
@@ -17,7 +17,7 @@ def run(context):
         
         command_definition = ui.commandDefinitions.itemById(COMMAND_ID)
         if not command_definition:
-            command_definition = ui.commandDefinitions.addButtonDefinition(COMMAND_ID, ADDIN_NAME, "Creates \"tails\" part of the dovetail woodworking joint on the specified edge", "Resources/Dovetails")
+            command_definition = ui.commandDefinitions.addButtonDefinition(COMMAND_ID, ADDIN_NAME, "在指定边缘创建燕尾榫的\"榫头\"部分", "Resources/Dovetails")
             
         on_command_created = DovetailsCommandCreatedHandler()
         command_definition.commandCreated.add(on_command_created)
@@ -27,9 +27,9 @@ def run(context):
         addins_panel.controls.addCommand(command_definition)
     except:
         if ui:
-            ui.messageBox("Failed:\n{}".format(traceback.format_exc()))
+            ui.messageBox("失败：\n{}".format(traceback.format_exc()))
             
-            
+
 def stop(context):
     try:
         app = adsk.core.Application.get()
@@ -46,13 +46,13 @@ def stop(context):
             command_definition.deleteMe()
     except:
         if ui:
-            ui.messageBox("Failed:\n{}".format(traceback.format_exc()))	
+            ui.messageBox("失败：\n{}".format(traceback.format_exc()))	
         
-        
+         
 class DovetailStartType(Enum):
-    FullPin = "Full pin"
-    HalfPin = "Half pin"
-    HalfTail = "Half tail"
+    FullPin = "完整榫肩"
+    HalfPin = "半榫肩"
+    HalfTail = "半榫头"
 
 class DovetailsCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
     def __init__(self):
@@ -68,49 +68,49 @@ class DovetailsCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             
             design = adsk.fusion.Design.cast(app.activeProduct)
             if not design:
-                ui.messageBox("A Fusion design must be active when invoking this command.")
+                ui.messageBox("使用此命令时，必须有一个处于活动状态的 Fusion 设计文档。")
                 return False
 
             command.setDialogMinimumSize(550, 600)
 
             inputs.addImageCommandInput("help_image", "", "./Resources/Dialog help.png")
                 
-            face_input = inputs.addSelectionInput("face", "Face", "Select a face where dovetails will be placed")
+            face_input = inputs.addSelectionInput("face", "面", "选择要放置燕尾榫的面")
             face_input.setSelectionLimits(1, 1)
             face_input.addSelectionFilter("SolidFaces")
             
-            edge_input = inputs.addSelectionInput("edge", "Edge", "Select an edge on the face where dovetails will be placed")
+            edge_input = inputs.addSelectionInput("edge", "边", "在选定面上选择要放置燕尾榫的边")
             edge_input.setSelectionLimits(1, 1)
             edge_input.addSelectionFilter("LinearEdges")
             
-            edge_length = inputs.addValueInput("edge_length", "Edge length", "mm", adsk.core.ValueInput.createByString("100 mm"))
-            edge_length.tooltip = "Usually it's set to board width parameter like \"drawer_height\"."
+            edge_length = inputs.addValueInput("edge_length", "边长", "mm", adsk.core.ValueInput.createByString("100 mm"))
+            edge_length.tooltip = "通常设置为板材宽度参数，例如 \"drawer_height\"。"
             
-            angle = inputs.addValueInput("angle", "Angle", "deg", adsk.core.ValueInput.createByString("7 deg"))
-            angle.tooltip = "Angle of the dovetails side. For 1:8 - 7 deg. For 1:6 - 9.5 deg."
+            angle = inputs.addValueInput("angle", "角度", "deg", adsk.core.ValueInput.createByString("7 deg"))
+            angle.tooltip = "燕尾榫侧边的角度。1:8 比例对应 7°，1:6 比例对应 9.5°。"
 
-            height = inputs.addValueInput("height", "Height", "mm", adsk.core.ValueInput.createByString("10 mm"))
-            height.tooltip = "Height of the dovetails from the board edge. " \
-                "Usually it's set to other board thickness parameter like \"drawer_side_thickness\"."
+            height = inputs.addValueInput("height", "高度", "mm", adsk.core.ValueInput.createByString("10 mm"))
+            height.tooltip = "燕尾榫从板边起始的高度。" \
+                "通常设置为另一块板的厚度参数，例如 \"drawer_side_thickness\"。"
 
-            thickness = inputs.addValueInput("thickness", "Thickness", "mm", adsk.core.ValueInput.createByString("10 mm"))
-            thickness.tooltip = "Thickness of the dovetails. Usually it's set to board thickness parameter like \"drawer_front_thickness\"."
+            thickness = inputs.addValueInput("thickness", "厚度", "mm", adsk.core.ValueInput.createByString("10 mm"))
+            thickness.tooltip = "燕尾榫的厚度。通常设置为板材厚度参数，例如 \"drawer_front_thickness\"。"
 
-            ratio = inputs.addValueInput("ratio", "Tails to pin ratio", "", adsk.core.ValueInput.createByString("2"))
-            ratio.tooltip = "Ratio of the maximum width of the tails to the maximum width of the pin."
+            ratio = inputs.addValueInput("ratio", "榫头与榫肩比例", "", adsk.core.ValueInput.createByString("2"))
+            ratio.tooltip = "榫头最大宽度与榫肩最大宽度的比值。"
 
-            pin = inputs.addValueInput("pin", "Maximum pin width", "mm", adsk.core.ValueInput.createByString("11 mm"))
-            pin.tooltip = "Maximum width of the full pin between dovetails. Increase this to produce more bigger dovetails, decrease otherwise."
+            pin = inputs.addValueInput("pin", "最大榫肩宽度", "mm", adsk.core.ValueInput.createByString("11 mm"))
+            pin.tooltip = "燕尾榫之间完整榫肩的最大宽度。增大此值可生成更大的燕尾榫，减小则反之。"
 
-            start_type_input = inputs.addDropDownCommandInput("start_type", "Start with", adsk.core.DropDownStyles.TextListDropDownStyle)
+            start_type_input = inputs.addDropDownCommandInput("start_type", "起始类型", adsk.core.DropDownStyles.TextListDropDownStyle)
             for st in DovetailStartType:
                 start_type_input.listItems.add(st.value, False, '')
             start_type_input.listItems[0].isSelected = True
-            start_type_input.tooltip = "Determine whenever to start with full pin or half pin."
+            start_type_input.tooltip = "指定以完整榫肩还是半榫肩开始。"
 
-            params_prefix = inputs.addStringValueInput("params_prefix", "Parameters name prefix", "dovetails_")
-            params_prefix.tooltip = "All generated dovetails has their parameters added as user parameters with the names prefixed with this text. " \
-                "Usually it's set to name of the part like \"drawer_front_dovetails_\""
+            params_prefix = inputs.addStringValueInput("params_prefix", "参数名称前缀", "dovetails_")
+            params_prefix.tooltip = "所有生成的燕尾榫参数将作为用户参数添加，其名称以此文本为前缀。" \
+                "通常设置为零件名称，例如 \"drawer_front_dovetails_\""
             
             on_select = DovetailsCommandSelectionEventHandler()
             command.selectionEvent.add(on_select)
@@ -125,7 +125,7 @@ class DovetailsCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             handlers.append(on_execute)
         except:
             if ui:
-                ui.messageBox("Failed:\n{}".format(traceback.format_exc()))
+                ui.messageBox("失败：\n{}".format(traceback.format_exc()))
                
 
 class DovetailsCommandSelectionEventHandler(adsk.core.SelectionEventHandler):
@@ -146,7 +146,7 @@ class DovetailsCommandSelectionEventHandler(adsk.core.SelectionEventHandler):
                 event_args.isSelectable = any([x for x in face.edges if x == edge])
         except:
             if ui:
-                ui.messageBox("Failed:\n{}".format(traceback.format_exc()))
+                ui.messageBox("失败：\n{}".format(traceback.format_exc()))
 
                 
 class DovetailsCommandInputChangedEventHandler(adsk.core.InputChangedEventHandler):
@@ -173,7 +173,7 @@ class DovetailsCommandInputChangedEventHandler(adsk.core.InputChangedEventHandle
                 prev = cur
         except:
             if ui:
-                ui.messageBox("Failed:\n{}".format(traceback.format_exc()))
+                ui.messageBox("失败：\n{}".format(traceback.format_exc()))
         
         
 def add_parameter_if_not_exists(design, prefix, name, value, units = "", comment = ""):
@@ -182,7 +182,7 @@ def add_parameter_if_not_exists(design, prefix, name, value, units = "", comment
     if not param:
         param = design.userParameters.add(param_name, adsk.core.ValueInput.createByString(value), units, comment)
         if not param:
-            raise ValueError("Unable to create user parameter: {}".format(param_name))
+            raise ValueError("无法创建用户参数：{}".format(param_name))
     return param
     
    
@@ -266,27 +266,27 @@ class DovetailsCommandExecuteEventHandler(adsk.core.CommandEventHandler):
             angle_param = add_parameter_if_not_exists(design, params_prefix, "angle",
                                                       angle_input.expression,
                                                       angle_input.unitType,
-                                                      "Dovetails angle")
+                                                      "燕尾榫角度")
             height_param = add_parameter_if_not_exists(design, params_prefix, "height",
                                                        height_input.expression,
                                                        height_input.unitType,
-                                                       "Dovetails height")
+                                                       "燕尾榫高度")
             thickness_param = add_parameter_if_not_exists(design, params_prefix, "thickness",
                                                           thickness_input.expression,
                                                           thickness_input.unitType,
-                                                          "Dovetails thickness")
+                                                          "燕尾榫厚度")
             edge_length_param = add_parameter_if_not_exists(design, params_prefix, "edge_length",
                                                             edge_length_input.expression,
                                                             edge_length_input.unitType,
-                                                            "Dovetails edge length")
+                                                            "燕尾榫边长")
             pin_param = add_parameter_if_not_exists(design, params_prefix, "pin",
                                                     pin_input.expression,
                                                     pin_input.unitType,
-                                                    "Dovetails maximum pin width")
+                                                    "燕尾榫最大榫肩宽度")
             ratio_param = add_parameter_if_not_exists(design, params_prefix, "ratio",
                                                       ratio_input.expression,
                                                       ratio_input.unitType,
-                                                      "Dovetails tails to pin approximate ratio")
+                                                      "燕尾榫榫头与榫肩近似比例")
                                                     
             if start_type == DovetailStartType.FullPin:
                 count_param_expression = "round (({} - {}) / ({} * (1 + {})))".format(edge_length_param.name, pin_param.name, pin_param.name, ratio_param.name)
@@ -295,15 +295,15 @@ class DovetailsCommandExecuteEventHandler(adsk.core.CommandEventHandler):
             elif start_type == DovetailStartType.HalfTail:
                 count_param_expression = "round ({} / ({} * (1 + {})) - 1)".format(edge_length_param.name, pin_param.name, ratio_param.name)
             else:
-                raise ValueError("Not supported start type: {}".format(start_type))
+                raise ValueError("不支持的起始类型：{}".format(start_type))
                 
             count_param = add_parameter_if_not_exists(design, params_prefix, "count",
                                                       count_param_expression,
                                                       "",
-                                                      "Number of the dovetails")
+                                                      "燕尾榫数量")
                                                       
             if count_param.value <= 0:
-                raise ValueError("Not applicable parameters specified - dovetails count expression resulted in invalid number {}".format(count_param.value))
+                raise ValueError("参数不适用 - 燕尾榫数量表达式计算得到无效数值 {}".format(count_param.value))
                 
             # calculate resulted tails width after number of tails has been calculated
             if start_type == DovetailStartType.FullPin:
@@ -313,12 +313,12 @@ class DovetailsCommandExecuteEventHandler(adsk.core.CommandEventHandler):
             elif start_type == DovetailStartType.HalfTail:
                 tail_param_expression = "{} / ({} + 1) - {}".format(edge_length_param.name, count_param.name, pin_param.name)
             else:
-                raise ValueError("Not supported start type: {}".format(start_type))
+                raise ValueError("不支持的起始类型：{}".format(start_type))
                 
             tail_param = add_parameter_if_not_exists(design, params_prefix, "tail",
                                                      tail_param_expression,
                                                      pin_input.unitType,
-                                                     "Dovetails tails minimal width")
+                                                     "燕尾榫榫头最小宽度")
                                                   
             component = face.body.parentComponent
             sketch = adsk.fusion.Sketch.cast(component.sketches.add(face))
@@ -335,7 +335,7 @@ class DovetailsCommandExecuteEventHandler(adsk.core.CommandEventHandler):
             
             (res, face_normal) = face.evaluator.getNormalAtPoint(face.centroid)
             if not res:
-                raise ValueError("Unable to get face normal")
+                raise ValueError("无法获取面法线")
                 
             face_normal.add(face.centroid.asVector())
             face_normal = sketch.modelToSketchSpace(face_normal.asPoint()).asVector()
@@ -452,7 +452,7 @@ class DovetailsCommandExecuteEventHandler(adsk.core.CommandEventHandler):
                 elif start_type == DovetailStartType.FullPin:
                     d.parameter.expression = pin_param.name
                 else:
-                    raise ValueError("Not supported start type: {}".format(start_type))
+                    raise ValueError("不支持的起始类型：{}".format(start_type))
                 
                 d = sketch.sketchDimensions.addAngularDimension(projected_edge, line1, new_point(0, 0.5, origin, x_axis, y_axis))
                 d.parameter.expression = "90 deg - {}".format(angle_param.name)
@@ -518,7 +518,7 @@ class DovetailsCommandExecuteEventHandler(adsk.core.CommandEventHandler):
             
         except:
             if ui:
-                ui.messageBox("Failed:\n{}".format(traceback.format_exc()))
+                ui.messageBox("失败：\n{}".format(traceback.format_exc()))
         
         
         
