@@ -4,7 +4,7 @@
 handlers = []
 
 ADDIN_NAME = "燕尾榫"
-COMMAND_ID = ADDIN_NAME + "Addin"
+COMMAND_ID = "DovetailsAddin"
 
 import adsk.core, adsk.fusion, adsk.cam, traceback, math
 from enum import Enum
